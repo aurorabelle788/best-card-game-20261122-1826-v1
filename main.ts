@@ -3,7 +3,7 @@
 // directory and writes dossier.json there with buildDossier, the kit's
 // own library. Standard library only; the same bytes on every run.
 
-import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
@@ -14,8 +14,13 @@ const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 const repoRoot = fileURLToPath(new URL('.', import.meta.url));
 
 // A fresh output every run, so the two grader runs write the same bytes.
-rmSync(outDir, { recursive: true, force: true });
-mkdirSync(outDir, { recursive: true });
+if (existsSync(outDir)) {
+  for (const entry of readdirSync(outDir)) {
+    rmSync(join(outDir, entry), { recursive: true, force: true });
+  }
+} else {
+  mkdirSync(outDir, { recursive: true });
+}
 
 cpSync(join(repoRoot, 'game'), join(outDir, 'game'), { recursive: true });
 if (existsSync(join(repoRoot, 'screenshots'))) {
